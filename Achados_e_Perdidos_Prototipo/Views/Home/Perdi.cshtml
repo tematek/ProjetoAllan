@@ -1,0 +1,402 @@
+﻿@model Achados_e_Perdidos_Prototipo.Models.CascataEncontreiPerdi
+@{
+    ViewBag.Title = "AchadosPerdidos";
+}
+
+<section class="perdi section">
+    <div class="container">
+
+        <fieldset>
+
+            <legend class="intro text-center">Cadastre abaixo o item perdido</legend>
+
+        </fieldset>
+
+        <div style="float:right">
+
+
+            <form class="form-horizontal">
+
+                <div class="control-group">
+                    <label class="control-label" for="selectbasic">Categoria</label>
+                    <div class="controls">
+
+                        @using (Html.BeginForm())
+                        {
+
+                            @Html.DropDownList("Categoria", ViewBag.idCategoria as SelectList, "Escolha a Categoria...", new { @class = "form-control" })
+
+                        }
+
+                    </div>
+
+                </div>
+            </form>
+
+
+
+            <label class="control-label" for="selectbasic">SubCategoria</label>
+
+            <div style="width: 300px">
+                <select id="subCategoria" class="form-control">
+                    <option>Escolha a Subcategoria...</option>
+                </select>
+
+            </div>
+
+
+            <label class="control-label" for="selectbasic">Complemento</label>
+
+            <div style="width: 300px">
+                <select id="DescricaosubCategoria" class="form-control">
+                    <option>Complemento...</option>
+                </select>
+
+            </div>
+
+            <br />
+            <br />
+
+
+            <input id="BtnSubmeterPerdi" class="btn btn-cta-secondary scrollto" type="submit" value="Enviar">
+
+
+            <br />
+            <br />
+
+
+        </div>
+
+        <div style="float:left">
+
+
+            <form class="form-search">
+
+                <style>
+                    html, body {
+                        height: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    #map {
+                        height: 100%;
+                    }
+
+                    .controls {
+                        margin-top: 10px;
+                        border: 1px solid transparent;
+                        border-radius: 2px 0 0 2px;
+                        box-sizing: border-box;
+                        -moz-box-sizing: border-box;
+                        height: 32px;
+                        outline: none;
+                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                    }
+
+                    #pac-input {
+                        background-color: #fff;
+                        font-family: Roboto;
+                        font-size: 15px;
+                        font-weight: 300;
+                        margin-left: 12px;
+                        padding: 0 11px 0 13px;
+                        text-overflow: ellipsis;
+                        width: 300px;
+                    }
+
+                        #pac-input:focus {
+                            border-color: #4d90fe;
+                        }
+
+                    .pac-container {
+                        font-family: Roboto;
+                    }
+
+                    #type-selector {
+                        color: #fff;
+                        background-color: #4d90fe;
+                        padding: 5px 11px 0px 11px;
+                    }
+
+                        #type-selector label {
+                            font-family: Roboto;
+                            font-size: 13px;
+                            font-weight: 300;
+                        }
+                </style>
+
+                <input style="width: 370px; color: black" id="pac-input" class="controls" type="text"
+                       placeholder="Informe o local">
+                <div id="type-selector" class="controls">
+                    <input type="radio" name="type" id="changetype-all" checked="checked">
+                    <label for="changetype-all">Todos</label>
+
+                    <input type="radio" name="type" id="changetype-establishment">
+                    <label for="changetype-establishment">Estabelecimentos</label>
+
+                    <input type="radio" name="type" id="changetype-address">
+                    <label for="changetype-address">Endereços</label>
+
+                    @*<input type="radio" name="type" id="changetype-geocode">
+            <label for="changetype-geocode">Geocodes</label>*@
+                </div>
+
+
+                <div id="mapa" style="height: 400px; width: 800px">
+
+                    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAqtvORWsIAMkQWHFBJ1v9FoL-tH_U-TsM&libraries=places&callback=initAutocomplete"
+                            async defer></script>
+
+                </div>
+
+
+            </form>
+ 
+
+            <input type="hidden" id="txtLatitude" name="txtLatitude" />
+            <input type="hidden" id="txtLongitude" name="txtLongitude" />
+
+        </div>
+
+    </div>
+</section>
+
+@section Scripts{
+    <script>
+
+        function initAutocomplete() {
+            var map = new google.maps.Map(document.getElementById('mapa'), {
+                center: { lat: -15.834550776033826, lng: -45.46140078124985 },
+                zoom: 4,
+            });
+            var input = (
+                document.getElementById('pac-input'));
+
+            var types = document.getElementById('type-selector');
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(types);
+
+            var autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo('bounds', map);
+
+            var infowindow = new google.maps.InfoWindow();
+            var marker = new google.maps.Marker({
+                map: map,
+                anchorPoint: new google.maps.Point(0, -29)
+            });
+
+            autocomplete.addListener('place_changed', function () {
+                infowindow.close();
+                marker.setVisible(false);
+                var place = autocomplete.getPlace();
+                if (!place.geometry) {
+                    window.alert("Autocomplete's returned place contains no geometry");
+                    return;
+                }
+
+                // If the place has a geometry, then present it on a map.
+                if (place.geometry.viewport) {
+                    map.fitBounds(place.geometry.viewport);
+                } else {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(17);  // Why 17? Because it looks good.
+                }
+                marker.setIcon(({
+                    url: place.icon,
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(35, 35)
+                }));
+                marker.setPosition(place.geometry.location);
+                marker.setVisible(true);
+
+                var address = '';
+                if (place.address_components) {
+                    address = [
+                      (place.address_components[0] && place.address_components[0].short_name || ''),
+                      (place.address_components[1] && place.address_components[1].short_name || ''),
+                      (place.address_components[2] && place.address_components[2].short_name || '')
+                    ].join(' ');
+                }
+
+                $('#txtLatitude').val(marker.getPosition().lat());
+                $('#txtLongitude').val(marker.getPosition().lng());
+
+                infowindow.setContent('<div><strong style="color: black">' + place.name + '</strong><br> <div><strong style="color: black">' + address + '</strong>');
+                infowindow.open(map, marker);
+            });
+
+            // Sets a listener on a radio button to change the filter type on Places
+            // Autocomplete.
+            function setupClickListener(id, types) {
+                var radioButton = document.getElementById(id);
+                radioButton.addEventListener('click', function () {
+                    autocomplete.setTypes(types);
+                });
+            }
+
+            setupClickListener('changetype-all', []);
+            setupClickListener('changetype-address', ['address']);
+            setupClickListener('changetype-establishment', ['establishment']);
+            setupClickListener('changetype-geocode', ['geocode']);
+        }
+
+        $(function () {
+
+            $("#BtnSubmeterPerdi").click(function () {
+
+                //Caso algum dropdrown não esteja preenchido, exibe alerta.
+                //if ($('#Estado').val() == 0 ||
+                //    $('#cidades').val() == 0 ||
+                //    $('#Categoria').val() == 0 ||
+                //    $('#bairro').val() == 0 ||
+                //    $('#DescricaosubCategoria').val() == 0) {
+
+                //    alert("Por favor, preencha todos os campos. Obrigado!")
+
+                if ($('#Categoria').val() == 0 ||
+                    $('#DescricaosubCategoria').val() == 0) {
+
+                    alert("Por favor, preencha todos os campos. Obrigado.")
+
+                }
+                else {
+
+                    if ($('#txtLatitude').val() == 0 ||
+                    $('#txtLongitude').val() == 0) {
+
+                        alert("Por favor, diga-nos, aproximadamente, onde perdeu o item.")
+
+                        return;
+
+                    }
+                    //Post
+                    $.post('SubmeteEncontreiPerdi',
+                        {
+
+                            //var idSubCat = $('#subCategoria option:selected').text()
+
+                            //Estado: $('#Estado option:selected').text(),
+                            //Cidade: $('#cidades option:selected').text(),
+                            //Categoria: $('#Categoria option:selected').text(),
+                            //Subcategoria: $('#subCategoria option:selected').text(),
+                            //Complento: $('#DescricaosubCategoria option:selected').text()
+
+                            Estado: "0",
+                            Cidade: "0",
+                            Bairro: "0",
+                            Categoria: $('#Categoria').val(),
+                            Subcategoria: $('#DescricaosubCategoria').val(),
+                            TipoItem: "Perdi",
+                            lttde: $('#txtLatitude').val(),
+                            lgttde: $('#txtLongitude').val(),
+
+
+
+
+                        },
+
+                        function (retorno) {
+
+                        });
+
+                    alert("Item cadastrado com sucesso. Obrigado!")
+
+                    
+                }
+
+
+            });
+
+        });
+
+
+
+        $(function () {
+
+            $("#Categoria").change(function () {
+
+                $("#DescricaosubCategoria").empty();
+                $("#subCategoria").empty();
+                if ($('#Categoria option:selected').text() != "Escolha a Categoria...") {
+
+                    var idCategoria = $(this).val();
+                    $.getJSON("/Home/GetsubCategoria?categoria=" + idCategoria, function (data) {
+                        $("#subCategoria").empty();
+                        $("#DescricaosubCategoria").empty();
+                        console.log(data);
+
+                        $("<option name='subCategoria' value='" + 0 + "'>" + "Escolha a Subcategoria..." + "</option><br>")
+                            .appendTo("#subCategoria");
+
+                        $("<option name='DescricaosubCategoria' value='" + 0 + "'>" + "Complemento..." + "</option><br>")
+                            .appendTo("#DescricaosubCategoria");
+
+                        for (var i = 0; i < data.length; i++) {
+                            console.log("estou dentro");
+                            $("<option name='subCategoria' value='" + data[i].idSubCat + "'>" + data[i].SubCatego + "</option><br>")
+                                .appendTo("#subCategoria");
+                        }
+                    });
+
+                }
+                else {
+
+                    $("<option name='subCategoria' value='" + 0 + "'>" + "Escolha a SubCategoria..." + "</option><br>")
+                        .appendTo("#subCategoria");
+
+                    $("<option name='DescricaosubCategoria' value='" + 0 + "'>" + "Complemento..." + "</option><br>")
+                        .appendTo("#DescricaosubCategoria");
+
+                }
+
+
+            });
+        });
+
+
+        $(function () {
+
+            $("#subCategoria").change(function () {
+
+                $("#DescricaosubCategoria").empty();
+
+                if ($('#subCategoria option:selected').text() != "Escolha a SubCategoria...") {
+
+                    //Essa linha captura o texto selecionado na combo.
+                    var idSubCat = $('#subCategoria option:selected').text();
+
+                    $.getJSON("/Home/GetDescricaosubCategoria?subcategoria=" + idSubCat, function (data) {
+                        $("#DescricaosubCategoria").empty();
+                        console.log(data);
+
+                        $("<option name='DescricaosubCategoria' value='" + 0 + "'>" + "Complemento..." + "</option><br>")
+                            .appendTo("#DescricaosubCategoria");
+                        for (var i = 0; i < data.length; i++) {
+                            console.log("estou dentro");
+                            $("<option name='DescricaosubCategoria' value='" + data[i].idDescricao + "'>" + data[i].Descri + "</option><br>")
+                                .appendTo("#DescricaosubCategoria");
+                        }
+                    });
+
+                }
+                else {
+
+                    $("<option name='DescricaosubCategoria' value='" + 0 + "'>" + "Complemento..." + "</option><br>")
+                        .appendTo("#DescricaosubCategoria");
+
+                }
+
+
+            });
+        });
+
+    </script>
+}
+
+
+
+
+
